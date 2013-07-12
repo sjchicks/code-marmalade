@@ -1,17 +1,20 @@
 package org.hicksst.codejam.lost;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-class Vertex
+class OldVertex
 {
   final int num;
   final Map<Integer, Route> adj = new HashMap<>();
   final Map<Integer, Route> routesByDestCity = new HashMap<>();
+  final List<Previous> previousInShortestPath = new ArrayList<>();
   int minDistance;
   int maxDistance;
 
-  Vertex(int num)
+  OldVertex(int num)
   {
     this.num = num;
   }
@@ -22,6 +25,7 @@ class Vertex
     return "Vertex{" +
         "num=" + num +
         ", adj=" + adj +
+        ", previous=" + previousInShortestPath +
         ", minDistance=" + minDistance +
         ", maxDistance=" + maxDistance +
         '}';
@@ -39,7 +43,7 @@ class Vertex
       return false;
     }
 
-    Vertex vertex = (Vertex) o;
+    OldVertex vertex = (OldVertex) o;
 
     if (num != vertex.num)
     {
