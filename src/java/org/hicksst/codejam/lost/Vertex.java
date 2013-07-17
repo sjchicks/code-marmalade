@@ -6,9 +6,7 @@ import java.util.Map;
 class Vertex
 {
   final int num;
-  final Map<Integer, Route> adj = new HashMap<>();
-  final Map<Integer, Route> routesByDestCity = new HashMap<>();
-  int minDistance;
+  final Map<Integer, Route> routesAway = new HashMap<>();
   int maxDistance;
 
   Vertex(int num)
@@ -21,8 +19,7 @@ class Vertex
   {
     return "Vertex{" +
         "num=" + num +
-        ", adj=" + adj +
-        ", minDistance=" + minDistance +
+        ", routesAway=" + routesAway +
         ", maxDistance=" + maxDistance +
         '}';
   }

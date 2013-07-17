@@ -3,14 +3,16 @@ package org.hicksst.codejam.lost;
 class Route
 {
   final int num;
-  final Vertex dest;
+  final Vertex startCity;
+  final Vertex endCity;
   final int min;
   final int max;
 
-  Route(int num, Vertex dest, int min, int max)
+  Route(int num, Vertex startCity, Vertex endCity, int min, int max)
   {
     this.num = num;
-    this.dest = dest;
+    this.startCity = startCity;
+    this.endCity = endCity;
     this.min = min;
     this.max = max;
   }
@@ -20,7 +22,8 @@ class Route
   {
     return "Route{" +
         "num=" + num +
-        ", dest=" + dest.num +
+        ", start=" + startCity.num +
+        ", end=" + endCity.num +
         ", min=" + min +
         ", max=" + max +
         '}';

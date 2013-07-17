@@ -2,9 +2,12 @@ package org.hicksst.codejam.ruralplanning;
 
 class Point
 {
-  private final int i;
-  private final int x;
-  private final int y;
+  Point next;
+  final int i;
+  final int x;
+  final int y;
+
+  double distFromCentre;
 
   Point(int i, int x, int y)
   {

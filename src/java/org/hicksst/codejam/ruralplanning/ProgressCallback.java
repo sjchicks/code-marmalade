@@ -1,12 +1,12 @@
 package org.hicksst.codejam.ruralplanning;
 
-import java.util.Set;
-
 public interface ProgressCallback
 {
-  void setRemainingPoints(Set<Point> points);
+  void setRemainingPoint(Point point);
 
   void fenceUpdated(PointList fence);
 
-  void setBounds(int minX, int minY, int maxX, int maxY);
+  void setProblemBounds(int minX, int minY, int maxX, int maxY);
+
+  void resultComplete(String result);
 }

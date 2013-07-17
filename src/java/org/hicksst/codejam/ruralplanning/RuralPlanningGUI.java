@@ -23,69 +23,75 @@ import static javax.swing.SpringLayout.NORTH;
 import static javax.swing.SpringLayout.SOUTH;
 import static javax.swing.SpringLayout.WEST;
 
-class Surface extends JPanel implements ProgressCallback
+class Canvas extends JPanel implements ProgressCallback
 {
+  private static final boolean SHOW_NUMBERS = false;
+
   private final int border = 25;
-  private PointList fence;
+
   private int minX;
   private int minY;
   private int maxX;
   private int maxY;
-  private Point point;
+  private int width;
+  private int height;
+
+  private PointList fence;
+  private Point remainingPoint;
 
   private void doDrawing(Graphics g)
   {
     Graphics2D g2d = (Graphics2D) g;
 
-    if (point == null || fence == null)
+    if (remainingPoint == null || fence == null)
     {
       return;
     }
 
     Dimension size = getSize();
 
-    int width = size.width - 2 * border;
-    int height = size.height - 2 * border;
-
+    width = size.width - 2 * border;
+    height = size.height - 2 * border;
 
     g2d.setColor(Color.lightGray);
     g2d.fillRect(0, 0, size.width, size.height);
 
     g2d.setColor(Color.darkGray);
-    g2d.drawLine(getX(width, 0), 0, getX(width, 0), size.height);
-    g2d.drawLine(0, getY(height, 0), size.width, getY(height, 0));
+    g2d.drawLine(getScreenX(0), 0, getScreenX(0), size.height);
+    g2d.drawLine(0, getScreenY(0), size.width, getScreenY(0));
 
     g2d.setColor(Color.blue);
     for (Point p : fence)
     {
-//      g2d.drawString(String.valueOf(p.i), getX(width, p.x), getY(height, p.y));
-      drawLine(g2d, width, height, p.x, p.y, p.next.x, p.next.y);
+      if (SHOW_NUMBERS)
+      {
+        g2d.drawString(String.valueOf(p.i), getScreenX(p.x), getScreenY(p.y));
+      }
+      drawLine(g2d, p.x, p.y, p.next.x, p.next.y);
     }
 
     g2d.setColor(Color.red);
 
-    g2d.drawString(String.valueOf(point.i), getX(width, point.x), getY(height, point.y));
-    drawLine(g2d, width, height, point.x, point.y, point.x, point.y);
-
+    if (SHOW_NUMBERS)
+    {
+      g2d.drawString(String.valueOf(remainingPoint.i), getScreenX(remainingPoint.x), getScreenY(remainingPoint.y));
+    }
+    drawLine(g2d, remainingPoint.x, remainingPoint.y, remainingPoint.x, remainingPoint.y);
   }
 
-  private void drawLine(Graphics2D g2d, int width, int height, int px1, int py1, int px2, int py2)
+  private void drawLine(Graphics2D g2d, int px1, int py1, int px2, int py2)
   {
-    int x1 = getX(width, px1);
-    int y1 = getY(height, py1);
-    int x2 = getX(width, px2);
-    int y2 = getY(height, py2);
-    g2d.drawLine(x1, y1, x2, y2);
+    g2d.drawLine(getScreenX(px1), getScreenY(py1), getScreenX(px2), getScreenY(py2));
   }
 
-  private int getY(int height, int py1)
+  private int getScreenY(int modelY)
   {
-    return height - ((py1 - minY) * height / (maxY - minY)) + border;
+    return height - ((modelY - minY) * height / (maxY - minY)) + border;
   }
 
-  private int getX(int width, int px1)
+  private int getScreenX(int modelX)
   {
-    return (px1 - minX) * width / (maxX - minX) + border;
+    return (modelX - minX) * width / (maxX - minX) + border;
   }
 
   @Override
@@ -98,7 +104,7 @@ class Surface extends JPanel implements ProgressCallback
   @Override
   public void setRemainingPoint(Point point)
   {
-    this.point = point;
+    this.remainingPoint = point;
   }
 
   @Override
@@ -124,7 +130,10 @@ class Surface extends JPanel implements ProgressCallback
 
 public class RuralPlanningGUI extends JFrame implements ProgressCallback
 {
-  private final Surface surface = new Surface();
+  private static final int DELAY_BETWEEN_MOVES_MS = 0;
+  private static final boolean WAIT_FOR_BUTTON_AFTER_TEST_CASE = false;
+
+  private final Canvas canvas = new Canvas();
 
   private final Semaphore semaphore = new Semaphore(1);
 
@@ -137,16 +146,16 @@ public class RuralPlanningGUI extends JFrame implements ProgressCallback
     SpringLayout layout = new SpringLayout();
     setLayout(layout);
 
-    add(surface);
+    add(canvas);
     JButton button = new JButton(new MyAbstractAction(semaphore));
     add(button);
 
     Container contentPane = getContentPane();
-    layout.putConstraint(WEST, surface, 5, WEST, contentPane);
-    layout.putConstraint(NORTH, surface, 5, NORTH, contentPane);
-    layout.putConstraint(EAST, contentPane, 5, EAST, surface);
-    layout.putConstraint(NORTH, button, 5, SOUTH, surface);
-    layout.putConstraint(EAST, button, 0, EAST, surface);
+    layout.putConstraint(WEST, canvas, 5, WEST, contentPane);
+    layout.putConstraint(NORTH, canvas, 5, NORTH, contentPane);
+    layout.putConstraint(EAST, contentPane, 5, EAST, canvas);
+    layout.putConstraint(NORTH, button, 5, SOUTH, canvas);
+    layout.putConstraint(EAST, button, 0, EAST, canvas);
     layout.putConstraint(SOUTH, contentPane, 5, SOUTH, button);
 
     setSize(500, 500);
@@ -173,28 +182,31 @@ public class RuralPlanningGUI extends JFrame implements ProgressCallback
   @Override
   public void setRemainingPoint(Point point)
   {
-    surface.setRemainingPoint(point);
-    surface.repaint();
+    canvas.setRemainingPoint(point);
+    canvas.repaint();
   }
 
   @Override
   public void fenceUpdated(PointList fence)
   {
-    surface.fenceUpdated(fence);
-    surface.repaint();
+    canvas.fenceUpdated(fence);
+    canvas.repaint();
     waitABit();
   }
 
   @Override
   public void setProblemBounds(int minX, int minY, int maxX, int maxY)
   {
-    surface.setProblemBounds(minX, minY, maxX, maxY);
+    canvas.setProblemBounds(minX, minY, maxX, maxY);
   }
 
   @Override
   public void resultComplete(String result)
   {
-    waitOnButton();
+    if (WAIT_FOR_BUTTON_AFTER_TEST_CASE)
+    {
+      waitOnButton();
+    }
   }
 
   private void waitOnButton()
@@ -212,7 +224,7 @@ public class RuralPlanningGUI extends JFrame implements ProgressCallback
   {
     try
     {
-      Thread.sleep(1);
+      Thread.sleep(DELAY_BETWEEN_MOVES_MS);
     }
     catch (InterruptedException ignored)
     {
